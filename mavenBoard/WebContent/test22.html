@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js "></script>
+<script type="text/javascript">
+
+	$(document).ready(function() {
+		
+		var currentPage = 1;
+		checkForHash();
+		
+
+		$("#link").bind("click", function(e) {
+			document.location.hash = "#" + currentPage;
+		});
+		
+	});
+
+	
+	function checkForHash() {
+ 		if (document.location.hash) {
+ 			var hashLocationName = document.location.hash;
+ 			alert("해쉬는 : "+hashLocationName);
+ 			
+ 		} else {
+ 			alert("해쉬 없음");
+ 		}
+ 	}
+
+</script>
+
+	
+	<a href="http://www.google.com" id="link">Google</a>
+</body>
+</html>

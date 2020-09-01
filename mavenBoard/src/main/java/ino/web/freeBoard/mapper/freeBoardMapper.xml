@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ino.web.freeBoard.mapper.freeBoardMapper">
+	
+	<select id="freeBoardGetList" resultType="freeBoardDto" parameterType="hashMap"> <!-- resultType="ino.web.board.dto.BoardDto" -->
+		
+		SELECT PAGING.*
+		FROM (
+			SELECT ROW_NUMBER() OVER(ORDER BY NUM DESC) AS rnum, 
+			NUM, 
+			TITLE, 
+			NAME, 
+			TO_CHAR(REGDATE, 'YYYY-MM-DD')REGDATE, 
+			CONTENT 
+			FROM FREEBOARD
+				WHERE NUM LIKE '%'||''||'%'
+			<if test='select.equals("DCODE_PK1") and !search.equals("")' >
+				AND NUM = #{search}
+			</if>
+			
+			<if test='select.equals("DCODE_PK2")' >
+				AND TITLE like '%'||#{search}||'%'
+			</if>
+			
+			<if test='(!startDate.equals("") and !endDate.equals(""))'>
+				AND TO_CHAR(REGDATE, 'YYYYMMDD')
+				BETWEEN #{startDate}
+				AND #{endDate}
+			</if>
+
+		ORDER BY LPAD( NUM, 5 ) DESC
+		) PAGING
+		
+		WHERE PAGING.RNUM 
+		BETWEEN #{startIndex}
+		AND #{PAGE_SIZE} * #{curPageNum}
+		
+	</select>
+	<!-- BETWEEN (#{totalList} - (#{pageSize}-1)) - ((#{curPageNum} -1) * #{pageSize}) 
+		AND #{totalList} - ((#{curPageNum} -1) * #{pageSize}) -->
+			<!-- 예 : 최대 리스트가 30개 일 때 1페이지의 목록은
+			(30 -9) - 0*10 부터 30 -0*10 이다. #{totalList}, #{pageSize}, #{curPageNum}
+			즉 21 부터 30까지 조회한다는 말-->
+			
+	<select id="freeBoardGetCommonList" resultType="java.util.HashMap" parameterType="hashMap">
+		SELECT M.CODE_PK
+	      , D.DCODE_PK
+	      , D.DCODE_NAME
+	      , D.USE_YN
+	  FROM MCODE M , DCODE d
+	 WHERE m.CODE_PK = D.CODE_PK
+	   AND m.code_pk = #{mcode_pk}
+	   and m.use_yn = 'Y' 
+	   and d.use_yn = 'Y'
+	</select>
+	
+	<select id="freeBoardCount" resultType="int" parameterType="hashMap">
+		
+		SELECT COUNT(*) 
+		FROM freeBoard 
+		
+			WHERE NUM LIKE '%'||''||'%'
+		<if test='select.equals("DCODE_PK1") and !search.equals("") ' >
+			AND NUM = #{search}
+		</if>
+		
+		<if test='select.equals("DCODE_PK2")' >
+			AND TITLE like '%'||#{search}||'%'
+		</if>
+		
+		<if test='!(startDate.equals("") or endDate.equals(""))'>
+			AND TO_CHAR(REGDATE, 'YYYYMMDD')
+			BETWEEN #{startDate}
+			AND #{endDate}
+		</if>
+
+	</select>
+		
+	<insert id="freeBoardInsertPro" parameterType="freeBoardDto">
+		INSERT INTO FREEBOARD(NUM, TITLE, NAME, REGDATE, CONTENT)
+		VALUES( FREEBOARDNUM_SEQ.NEXTVAL, #{title}, #{name}, SYSDATE, #{content})
+	</insert>
+	
+	<select id="freeBoardDetailByNum" resultType="freeBoardDto" parameterType="int">
+		SELECT NUM, TITLE, NAME, TO_CHAR(REGDATE, 'YYYY/MM/DD')REGDATE, CONTENT FROM FREEBOARD
+		WHERE NUM=#{num}
+	</select>
+	
+	<select id="freeBoardNewNum" resultType="int">
+		SELECT MAX(NUM)
+		FROM FREEBOARD
+	</select>
+	
+	<update id="freeBoardModify" parameterType="freeBoardDto">
+		UPDATE FREEBOARD
+		SET TITLE = #{title}
+				, CONTENT = #{content}
+		WHERE NUM = #{num}
+		
+	</update>
+	
+	<update id="freeBoardDelete" parameterType="int">
+		DELETE FROM FREEBOARD
+		WHERE NUM = #{num}
+		
+	</update>
+	
+	
+</mapper>
